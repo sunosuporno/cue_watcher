@@ -5,6 +5,7 @@ const schedule = require("node-schedule");
 const cors = require("cors");
 const fetch = require("node-fetch");
 const converter = require("hex2dec");
+const ethers = require("ethers");
 const app = express();
 app.use(cors());
 const { MongoClient, ServerApiVersion } = require("mongodb");
@@ -25,7 +26,6 @@ const client = new MongoClient(uri, {
 });
 
 const checkLatestBlockEth = async () => {
-  console.log(covalentKey);
   const chainId = 1;
   try {
     const url = `https://api.covalenthq.com/v1/1/block_v2/latest/?key=${covalentKey}`;
@@ -125,10 +125,11 @@ const handleNotifs = async (
 //   );
 // };
 
-const tableLand = async () => {
+const tableLand = async (table) => {
   try {
     const tableLandUrl =
-      "https://testnet.tableland.network/query?mode=json&s=select%20wallet_address,%20token%20from%20cue_notify_80001_2604";
+      "https://testnet.tableland.network/query?mode=json&s=select%20wallet_address,%20token%20from%20" +
+      table;
     const optionsTableland = {
       method: "GET",
     };
@@ -140,60 +141,80 @@ const tableLand = async () => {
   }
 };
 
-// const demo = async () => {
-//   try {
-//     const endBlock = await checkLatestBlockPolygon();
-//     const dataTableland = await tableLand();
-//     console.log(dataTableland);
-//     for (let i = 0; i < dataTableland.length; i++) {
-//       try {
-//         const url = `https://api.covalenthq.com/v1/137/address/${dataTableland[i].wallet_address}/transfers_v2/?quote-currency=USD&format=JSON&contract-address=${dataTableland[i].token}&key=${covalentKey}`;
-//         const options = {
-//           method: "GET",
-//         };
-//         const response = await fetch(url, options);
-//         const data = await response.json();
-//         const items = data.data.items;
-//         items.forEach(async (item) => {
-//           const transferDetail = item.transfers[0];
-//           console.log(transferDetail);
-//           if (transferDetail.transfer_type == "OUT") {
-//             await handleNotifs(
-//               transferDetail.from_address,
-//               transferDetail.contract_address,
-//               transferDetail.contract_ticker_symbol,
-//               transferDetail.tx_hash,
-//               "Polygon",
-//               "E4VTHCED2EMGBZKBNGV21H8M6D0Y"
-//             );
-//           } else if (transferDetail.transfer_type == "IN") {
-//             await handleNotifs(
-//               transferDetail.to_address,
-//               transferDetail.contract_address,
-//               transferDetail.contract_ticker_symbol,
-//               transferDetail.tx_hash,
-//               "Polygon",
-//               "TAAZ4M470SMWFPG9E9K64ZBQ1847"
-//             );
-//           }
-//         });
-//       } catch (err) {
-//         console.log(err);
-//       }
-//     }
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
-
-const job = schedule.scheduleJob("*/1 * * * *", async function () {
+const demo = async () => {
   try {
-    const endBlock = await checkLatestBlockPolygon();
-    const dataTableland = await tableLand();
+    const endBlock = await checkLatestBlockEth();
+    const dataTableland = await tableLand("cue_notify_5_770");
     console.log(dataTableland);
     for (let i = 0; i < dataTableland.length; i++) {
       try {
-        const url = `https://api.covalenthq.com/v1/137/address/${dataTableland[i].wallet_address}/transfers_v2/?quote-currency=USD&format=JSON&contract-address=${dataTableland[i].token}&key=${covalentKey}`;
+        const provider = new ethers.providers.JsonRpcProvider(
+          "https://weathered-capable-smoke.discover.quiknode.pro/" +
+            quicknodeEth
+        );
+        provider.connection.headers = { "x-qn-api-version": 1 };
+        const heads = await provider.send("qn_getWalletTokenTransactions", {
+          address: "0x7a721260416e764618b059811eaf099a940af14",
+          contract: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        });
+        console.log(heads);
+        // items.forEach(async (item) => {
+        //   const transferDetail = item.transfers[0];
+        //   console.log(transferDetail);
+        //   if (transferDetail.transfer_type == "OUT") {
+        //     await handleNotifs(
+        //       transferDetail.from_address,
+        //       transferDetail.contract_address,
+        //       transferDetail.contract_ticker_symbol,
+        //       transferDetail.tx_hash,
+        //       "Polygon",
+        //       "E4VTHCED2EMGBZKBNGV21H8M6D0Y",
+        //       "cue_notify_80001_2604"
+        //     );
+        //   } else if (transferDetail.transfer_type == "IN") {
+        //     await handleNotifs(
+        //       transferDetail.to_address,
+        //       transferDetail.contract_address,
+        //       transferDetail.contract_ticker_symbol,
+        //       transferDetail.tx_hash,
+        //       "Polygon",
+        //       "TAAZ4M470SMWFPG9E9K64ZBQ1847",
+        //       "cue_notify_80001_2604"
+        //     );
+        //   }
+        // });
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const demo2 = async () => {
+  const provider = new ethers.providers.JsonRpcProvider(
+    "https://weathered-capable-smoke.discover.quiknode.pro/517a38550ddfc089ac0758e6cb65b3a6741433cf/"
+  );
+  provider.connection.headers = { "x-qn-api-version": 1 };
+  const heads = await provider.send("qn_getWalletTokenTransactions", {
+    address: "0x7a721260416e764618b059811eaf099a940af14",
+    contract: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+  });
+  console.log(heads);
+};
+
+let startPolygonBlock = 33498124;
+
+const job = schedule.scheduleJob("*/1 * * * *", async function () {
+  try {
+    console.log(startPolygonBlock);
+    const endBlock = await checkLatestBlockPolygon();
+    const dataTableland = await tableLand("cue_notify_80001_2604");
+    console.log(dataTableland);
+    for (let i = 0; i < dataTableland.length; i++) {
+      try {
+        const url = `https://api.covalenthq.com/v1/137/address/${dataTableland[i].wallet_address}/transfers_v2/?quote-currency=USD&format=JSON&contract-address=${dataTableland[i].token}&starting-block=${startPolygonBlock}&ending-block=${endBlock}&key=${covalentKey}`;
         const options = {
           method: "GET",
         };
@@ -229,11 +250,58 @@ const job = schedule.scheduleJob("*/1 * * * *", async function () {
         console.log(err);
       }
     }
+    startPolygonBlock = endBlock;
   } catch (err) {
     console.log(err);
   }
 });
 
-demo();
-
+// const job2 = schedule.scheduleJob("*/1 * * * *", async function () {
+//   const endBlock = await checkLatestBlockEth();
+//   const dataTableland = await tableLand("cue_notify_5_770");
+//   console.log(dataTableland);
+//   for (let i = 0; i < dataTableland.length; i++) {
+//     for (let i = 0; i < dataTableland.length; i++) {
+//       try {
+//         const provider = new ethers.providers.JsonRpcProvider(
+//           "https://weathered-capable-smoke.discover.quiknode.pro/" + quicknodeEth
+//         );
+//         provider.connection.headers = { "x-qn-api-version": 1 };
+//         const heads = await provider.send("qn_getWalletTokenTransactions", {
+//           address: "0x07a721260416e764618B059811eaf099a940Af14",
+//           contract: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+//         });
+//         console.log(heads);
+//         items.forEach(async (item) => {
+//           const transferDetail = item.transfers[0];
+//           console.log(transferDetail);
+//           if (transferDetail.transfer_type == "OUT") {
+//             await handleNotifs(
+//               transferDetail.from_address,
+//               transferDetail.contract_address,
+//               transferDetail.contract_ticker_symbol,
+//               transferDetail.tx_hash,
+//               "Polygon",
+//               "E4VTHCED2EMGBZKBNGV21H8M6D0Y",
+//               "cue_notify_80001_2604"
+//             );
+//           } else if (transferDetail.transfer_type == "IN") {
+//             await handleNotifs(
+//               transferDetail.to_address,
+//               transferDetail.contract_address,
+//               transferDetail.contract_ticker_symbol,
+//               transferDetail.tx_hash,
+//               "Polygon",
+//               "TAAZ4M470SMWFPG9E9K64ZBQ1847",
+//               "cue_notify_80001_2604"
+//             );
+//           }
+//         });
+//       } catch (err) {
+//         console.log(err);
+//       }
+//     }
+//   }
+// })
+// demo2();
 app.listen(PORT);
