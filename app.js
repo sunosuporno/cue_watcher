@@ -27,6 +27,10 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+app.get("/", (req, res) => {
+  res.status(200).send("Alive!");
+});
+
 const checkLatestBlockEth = async () => {
   const chainId = 1;
   try {
@@ -122,12 +126,6 @@ const handleNotifs = async (
   }
 };
 
-// const handleNotifsWithdraw = async (address, token, ticker, hash) => {
-//   await console.log(
-//     `You have sent ${ticker} from ${address} which has address ${token} on chain with hash ${hash}`
-//   );
-// };
-
 const tableLand = async (table) => {
   try {
     const tableLandUrl =
@@ -143,71 +141,6 @@ const tableLand = async (table) => {
     console.log(err);
   }
 };
-
-// const demo = async () => {
-//   try {
-//     const endBlock = await checkLatestBlockEth();
-//     const dataTableland = await tableLand("cue_notify_5_770");
-//     console.log(dataTableland);
-//     if (dataTableland.length > 0) {
-//       const newDataTableland = dataTableland.map((item) => {
-//         item.wallet_address = web3.utils.toChecksumAddress(item.wallet_address);
-//         item.token = web3.utils.toChecksumAddress(item.token);
-//         return item;
-//       });
-//       console.log(newDataTableland);
-//       for (let i = 0; i < newDataTableland.length; i++) {
-//         try {
-//           const provider = new ethers.providers.JsonRpcProvider(
-//             "https://weathered-capable-smoke.discover.quiknode.pro/" +
-//               quicknodeEth +
-//               "/"
-//           );
-//           provider.connection.headers = { "x-qn-api-version": 1 };
-//           const heads = await provider.send("qn_getWalletTokenTransactions", {
-//             address: newDataTableland[i].wallet_address,
-//             contract: newDataTableland[i].token,
-//             page: 1,
-//             perPage: 10,
-//           });
-//           console.log(heads);
-//           console.log(heads.transfers);
-//           const items = heads.transfers;
-//           console.log(heads.token.symbol);
-//           items.forEach(async (item) => {
-//             if (item.from == newDataTableland[i].wallet_address) {
-//               await handleNotifs(
-//                 item.from.toLowerCase(),
-//                 newDataTableland[i].token.toLowerCase(),
-//                 heads.token.symbol,
-//                 item.txHash,
-//                 "Ethereum",
-//                 "E4VTHCED2EMGBZKBNGV21H8M6D0Y",
-//                 "cue_notify_5_770"
-//               );
-//             } else if (item.to == newDataTableland[i].wallet_address) {
-//               await handleNotifs(
-//                 item.to.toLowerCase(),
-//                 newDataTableland[i].token.toLowerCase(),
-//                 heads.token.symbol,
-//                 item.txHash,
-//                 "Ethereum",
-//                 "TAAZ4M470SMWFPG9E9K64ZBQ1847",
-//                 "cue_notify_5_770"
-//               );
-//             }
-//           });
-//         } catch (err) {
-//           console.log(err);
-//         }
-//       }
-//     } else {
-//       return;
-//     }
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
 
 let startPolygonBlock = 33498124;
 let startEthBlock = 15609295;
